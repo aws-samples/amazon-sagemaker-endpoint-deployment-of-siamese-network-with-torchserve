@@ -1,0 +1,5 @@
+boto3==1.23.3
+matplotlib==3.5.2
+Pillow==9.1.1
+requests==2.26.0
+streamlit==1.9.0
