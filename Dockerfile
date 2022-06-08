@@ -1,6 +1,10 @@
 FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
 
 ENV PYTHONUNBUFFERED TRUE
+RUN useradd -u 8877 siamese
+USER siamese
+
+HEALTHCHECK NONE
 
 # PREREQUISITE
 RUN apt-get update && apt-get install -y software-properties-common rsync
