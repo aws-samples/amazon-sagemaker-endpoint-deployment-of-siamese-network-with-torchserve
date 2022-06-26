@@ -1,8 +1,8 @@
 FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
 
 ENV PYTHONUNBUFFERED TRUE
-RUN useradd -u 8877 siamese
-USER siamese
+RUN useradd -u 8877 twin
+USER twin
 
 HEALTHCHECK NONE
 
