@@ -571,6 +571,8 @@ The first call would have longer latency due to model weights loading defined in
 
 ## Deployment to Amazon SageMaker Inference Endpoint
 
+For customised machine learning model deployment and hosting, Amazon SageMaker is fully modular, which means we can always bring in customised algorithms and containers and use only the services that are required. In our case it is the Amazon SageMaker Model and Endpoint. Concretely, we are building a TorchServe container and host it using Amazon SageMaker for a fully-managed model hosting and elastic scaling experience, with simply a few lines of code. On the client side, we get predictions with simple API calls to its secure endpoint backed by TorchServe.
+
 There are 4 steps to setup a SageMaker Endpoint with TorchServe:
 
 1. Build customized Docker Image and push to Amazon Elastic Container Registry (ECR). The dockerfile is provided in root of this code repository, which helps setup CUDA and TorchServe dependencies.
