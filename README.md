@@ -368,9 +368,9 @@ For more details please refer to `notebook/02_pytorch_inference.ipynb` [[link](n
 
 ## Deployment to TorchServe
 
-In this section we deploy the PyTorch model to TorchServe. For installation, please refer to TorchServe [Github](https://github.com/pytorch/serve) Repository.
+TorchServe is easy to use. It comes with a convenient commnad line interface (CLI) to deploy locally. Though it comes with default handlers for common problems such as image classification, object detection, image segmentation, and text classification, we can always tailor it for our own specifications: as TorchServe is open source, which means it’s fully open and extensible to fit any deployment needs.
 
-Overall, there are mainly 3 steps to use TorchServe:
+In this section we deploy the PyTorch model to TorchServe. For installation, please refer to TorchServe [Github](https://github.com/pytorch/serve) Repository. Overall, there are mainly 3 steps to use TorchServe:
 
 1. Archive the model into `*.mar`.
 2. Start the `torchserve`.
