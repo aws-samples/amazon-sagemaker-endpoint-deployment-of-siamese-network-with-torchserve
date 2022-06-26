@@ -63,9 +63,9 @@ class AdaptiveConcatPool2d(Module):
         return torch.cat([self.mp(x), self.ap(x)], 1)
 
 
-class SiameseHandler:
+class TwinHandler:
     """
-    DIYSegmentation handler class.
+    Handler Class.
     """
 
     def __init__(self):
@@ -195,12 +195,13 @@ class SiameseHandler:
                 res[pred_cls].backward()
                 grad = hookg.stored
             
-            self.encoder_reload.zero_grad(), self.head_reload.zero_grad()
             weight_left = grad[0][0].mean(dim=[1, 2], keepdim=True)
             self.cam_map_left = (weight_left * act[0][0]).sum(0)
 
             weight_right = grad[1][0].mean(dim=[1, 2], keepdim=True)
             self.cam_map_right = (weight_right * act[1][0]).sum(0)
+            
+            self.encoder_reload.zero_grad(), self.head_reload.zero_grad()
 
         return res
 
@@ -224,7 +225,7 @@ class SiameseHandler:
             ]
 
 
-_service = SiameseHandler()
+_service = TwinHandler()
 
 
 def handle(data, context):
