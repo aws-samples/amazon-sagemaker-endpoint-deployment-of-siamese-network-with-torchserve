@@ -618,6 +618,8 @@ neg, pos
 
 ### Web Application Demonstration
 
+Streamlit is an open source framework for data scientists to efficiently create interactive web-based data applications in pure Python. It allows for quick end-to-end deployment with minimal effort and the ability to scale out the application as needed in a secure and robust way, without getting bogged down in time-consuming front-end development.
+
 To run the streamlit application provided in the root of this code repository, first install the dependencies by:
 
 ```sh
