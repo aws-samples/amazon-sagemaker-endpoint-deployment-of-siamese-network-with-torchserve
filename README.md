@@ -63,7 +63,7 @@ For other installation options, please refer to the fast.ai documentation. The f
 
 For Twin Neural Networks, multiple input data are passed through a _encoding_ neural network to generated their hyper-dimensional embedding vectors, which are concatenated before fed into a _fully connected network_ for output, as shown in _Fig. 1_.
 
-| ![siamese](static/siamese_archi.png) |
+| ![twin](static/twin_archi.png) |
 |:--:|
 | **Fig. 1 - Twin Neural Network Architecture**|
 
@@ -131,7 +131,7 @@ head = Sequential(
 As shown in _Fig. 1_, both images are passed through the encoding network, and the output is concatenated before fed into the fully connected network.
 
 ```python
-class SiameseModel(Module):
+class TwinModel(Module):
     def __init__(self, encoder, head):
         super().__init__()
         self.encoder, self.head = encoder, head
@@ -140,7 +140,7 @@ class SiameseModel(Module):
         ftrs = torch.cat([self.encoder(x1), self.encoder(x2)], dim=1)
         return self.head(ftrs)
 
-model = SiameseModel(encoder, head)
+model = TwinModel(encoder, head)
 ```
 
 ### Dataset and Transformations
@@ -174,7 +174,7 @@ image_tfm = transforms.Compose(
 Per fast.ai's unique semantic requirement, define the basic image-pair and label data entity for visualisation, by:
 
 ```python
-class SiameseImage(fastuple):
+class TwinImage(fastuple):
     @staticmethod
     def img_restore(image: torch.Tensor):
         return (image - image.min()) / (image.max() - image.min())
@@ -203,7 +203,7 @@ Then define the helper function parsing image breads from its file path, and tak
 def label_func(fname):
     return re.match(r'^(.*)_\d+.jpg$', fname.name).groups()[0]
 
-class SiameseTransform(Transform):
+class TwinTransform(Transform):
     def __init__(self, files, label_func, splits):
         self.labels = files.map(label_func).unique()
         self.lbl2files = {
@@ -218,7 +218,7 @@ class SiameseTransform(Transform):
         if (f not in self.valid) and random.random() < 0.5:
             img1, img2 = img2, img1
         img1, img2 = image_tfm(img1), image_tfm(img2)
-        return SiameseImage(img1, img2, t)
+        return TwinImage(img1, img2, t)
 
     def _draw(self, f):
         same = random.random() < 0.5
@@ -236,7 +236,7 @@ Randomly split the dataset into train/validation partitions, and construct `data
 
 ```python
 splits = RandomSplitter()(files)
-tfm = SiameseTransform(files, label_func, splits)
+tfm = TwinTransform(files, label_func, splits)
 tls = TfmdLists(files, tfm, splits=splits)
 dls = tls.dataloaders(
     bs=32,
@@ -252,11 +252,11 @@ Now setup loss function and parameter groups, after which trigger the fast.ai tr
 def loss_func(out, targ):
     return nn.CrossEntropyLoss()(out, targ.long())
 
-def siamese_splitter(model):
+def twin_splitter(model):
     return [params(model.encoder), params(model.head)]
 
 learn = Learner(
-    dls, model, loss_func=loss_func, splitter=siamese_splitter, metrics=accuracy
+    dls, model, loss_func=loss_func, splitter=twin_splitter, metrics=accuracy
 )
 
 learn.freeze()
@@ -285,7 +285,7 @@ torch.save(learn.encoder.state_dict(), "./model/encoder_weight.pth")
 torch.save(learn.head.state_dict(), "./model/head_weight.pth")
 ```
 
-For more details about the modeling process, refer to `notebook/01_fastai_siamese.ipynb` [[link](notebook/01_fastai_siamese.ipynb)].
+For more details about the modeling process, refer to `notebook/01_fastai_twin.ipynb` [[link](notebook/01_fastai_twin.ipynb)].
 
 ### Convolutional Neural Network Interpretation
 
@@ -534,19 +534,19 @@ Now it's ready to setup and launch TorchServe.
 Step 1: Archive the model PyTorch
 
 ```bash
-torch-model-archiver --model-name siamese --version 1.0 --serialized-file ./model/encoder_weight.pth --export-path model_store --handler ./deployment/handler.py -f --extra-files ./model/head_weight.pth -f
+torch-model-archiver --model-name twin --version 1.0 --serialized-file ./model/encoder_weight.pth --export-path model_store --handler ./deployment/handler.py -f --extra-files ./model/head_weight.pth -f
 ```
 
 Step 2: Serve the Model
 
 ```bash
-torchserve --start --ncs --model-store model_store --models siamese.mar
+torchserve --start --ncs --model-store model_store --models twin.mar
 ```
 
 Step 3: Call API and Get the Response (here we use [httpie](https://httpie.org/)).
 
 ```bash
-time http --form POST http://127.0.0.1:8080/predictions/siamese left@sample/c1.jpg right@sample/c2.jpg cam=False
+time http --form POST http://127.0.0.1:8080/predictions/twin left@sample/c1.jpg right@sample/c2.jpg cam=False
 >>>
 HTTP/1.1 200
 Cache-Control: no-cache; no-store, must-revalidate, private
@@ -653,7 +653,7 @@ This repository presented an end-to-end workflow of training a Twin Neural Netwo
 ## Reference
 
 - [fast.ai · Making neural nets uncool again](https://www.fast.ai/)
-- [Tutorial - Using fastai on a custom new task](https://docs.fast.ai/tutorial.siamese.html#Patch-in-a-siampredict-method-to-Learner,-to-automatically-show-images-and-prediction)
+- [Tutorial - Using fastai on a custom new task](https://docs.fast.ai/tutorial.siamese.html)
 - [Deep Learning for Coders with Fastai and Pytorch: AI Applications Without a PhD](https://www.amazon.com/Deep-Learning-Coders-fastai-PyTorch/dp/1492045527)
 - [Walk with fastai: Lesson 7 - Siamese](https://walkwithfastai.com/Siamese)
 - [TORCHSERVE](https://pytorch.org/serve/)
