@@ -1,10 +1,10 @@
-# Siamese Neural Network Training with PyTorch and fast.ai and its Deployment with TorchServe on Amazon SageMaker
+# Twin Neural Network Training with PyTorch and fast.ai and its Deployment with TorchServe on Amazon SageMaker
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
 
-- [Siamese Neural Network Training with PyTorch and fast.ai and its Deployment with TorchServe on Amazon SageMaker](#siamese-neural-network-training-with-pytorch-and-fastai-and-its-deployment-with-torchserve-on-amazon-sagemaker)
+- [Twin Neural Network Training with PyTorch and fast.ai and its Deployment with TorchServe on Amazon SageMaker](#twin-neural-network-training-with-pytorch-and-fastai-and-its-deployment-with-torchserve-on-amazon-sagemaker)
   - [Introduction](#introduction)
   - [Getting started with a PyTorch model trained with fast.ai](#getting-started-with-a-pytorch-model-trained-with-fastai)
     - [Dataset and Transformations](#dataset-and-transformations)
@@ -13,7 +13,7 @@
     - [Model Architecture](#model-architecture)
       - [Encoding Network](#encoding-network)
       - [Fully Connected Network](#fully-connected-network)
-      - [Siamese Network](#siamese-network)
+      - [Twin Network](#twin-network)
     - [Training and Saving](#training-and-saving)
     - [Convolutional Neural Network Interpretation](#convolutional-neural-network-interpretation)
   - [Deployment to TorchServe](#deployment-to-torchserve)
@@ -34,17 +34,11 @@
 
 ## Introduction
 
-Siamese Neural Network makes predictions leveraging information from multiple sources. A common use case is taking multiple input data, e.g. images, and predicting whether they belong to the same class; though its application does not limit to computer vision or classification problem. Concretely, multiple input data are passed through a _encoding_ neural network to generated their hyper-dimensional embedding vectors, which are concatenated before fed into a _fully connected network_ for output, as shown in _Fig. 1_.
+Twin Neural Network (commonly known as a Siamese Neural Network) makes predictions leveraging information from multiple sources. A common use case is taking multiple input data, e.g. images, and predicting whether they belong to the same class; though its application does not necessarily limit to computer vision or classification problems. In practise, however, artificial neural network training takes extensive and sophisticated efforts. Fortunately, there are a variety of deep learning frameworks available to tackle those, and out which stands out [fast.ai](https://www.fast.ai/) that has become one of the most cutting-edge, open source, deep learning frameworks based on [PyTorch](https://pytorch.org/). It provides concise user interface and well designed, documented APIs, which empowers developers and machine learning practitioners with productivity and flexibility.
 
-| ![siamese](static/siamese_archi.png) |
-|:--:|
-| **Fig. 1 - Siamese Neural Network Architecture**|
+For deployment, [Amazon Web Services (Amazon AWS)](https://aws.amazon.com/) developed [TorchServe](https://pytorch.org/serve/) in partnership with Meta (previously, Facebook), which is a flexible and easy-to-use open source tool for serving PyTorch models. It removes the heavy lifting of deploying and serving PyTorch models with Kubernetes. With TorchServe, many features are out-of-the-box and they provide full flexibility of deploying trained PyTorch models at scale. In addition, [Amazon SageMaker](https://aws.amazon.com/sagemaker/) endpoint has been a fully managed service that allows users to make real-time inferences via a REST API, and save developers from managing their own server instances, load balancing, fault-tolerance, auto-scaling and model monitoring, etc. Amazon SageMaker endpoint supports industry level machine learning inference and graphics-intensive applications while being [cost-effective](https://aws.amazon.com/sagemaker/pricing/).
 
-Neural Networks training in practise takes extensive and sophisticated efforts. Fortunately, there are a variety of deep learning frameworks available to tackle those, and out which stands out [fast.ai](https://www.fast.ai/) that has become one of the most cutting-edge, open source, deep learning frameworks based on [PyTorch](https://pytorch.org/). It provides concise user interface and well designed, documented APIs, which empowers developers and machine learning practitioners with productivity and flexibility.
-
-For deployment, [Amazon Web Services (Amazon AWS)](https://aws.amazon.com/) developed [TorchServe](https://pytorch.org/serve/) in partnership with Meta (previously, Facebook), which is a flexible and easy-to-use open source tool for serving PyTorch models. It removes the heavy lifting of deploying and serving PyTorch models with Kubernetes. With TorchServe, many features are out-of-the-box and they provide full flexibility of deploying trained PyTorch models at scale. Meanwhile, [Amazon SageMaker](https://aws.amazon.com/sagemaker/) endpoint has been a fully managed service that allows users to make real-time inferences via a REST API, and save developers from managing their own server instances, load balancing, fault-tolerance, auto-scaling and model monitoring, etc. Amazon SageMaker endpoint supports industry level machine learning inference and graphics-intensive applications while being [cost-effective](https://aws.amazon.com/sagemaker/pricing/).
-
-In this repository we demonstrate how to train a Siamese Neural Network based on PyTorch and fast.ai, and deploy it with TorchServe on Amazon SageMaker Inference endpoint. For demonstration purpose, we build an interactive web application for users to upload images and make inference from the trained and deployed model, based on [streamlit](https://streamlit.io/), which is an open source framework for data scientists to efficiently create interactive web-based data applications in pure Python.
+In this repository we demonstrate how to train a Twin Neural Network based on PyTorch and fast.ai, and deploy it with TorchServe on Amazon SageMaker Inference endpoint. For demonstration purpose, we build an interactive web application for users to upload images and make inference from the trained and deployed model, based on [streamlit](https://streamlit.io/), which is an open source framework for data scientists to efficiently create interactive web-based data applications in pure Python.
 
 All the code used in this document is available on [GitHub](https://github.com/aws-samples/amazon-sagemaker-endpoint-deployment-of-siamese-network-with-torchserve).
 
@@ -168,6 +162,12 @@ dls = tls.dataloaders(
 
 ### Model Architecture
 
+For Twin Neural Networks, multiple input data are passed through a _encoding_ neural network to generated their hyper-dimensional embedding vectors, which are concatenated before fed into a _fully connected network_ for output, as shown in _Fig. 1_.
+
+| ![siamese](static/siamese_archi.png) |
+|:--:|
+| **Fig. 1 - Twin Neural Network Architecture**|
+
 #### Encoding Network
 
 `ResNet50` is used, as an example, with its pre-trained weights, and the last fully connected layer is removed.
@@ -227,7 +227,7 @@ head = Sequential(
         )
 ```
 
-#### Siamese Network
+#### Twin Network
 
 As shown in _Fig. 1_, both images are passed through the encoding network, and the output is concatenated before fed into the fully connected network.
 
@@ -644,7 +644,7 @@ Make sure that you delete the following resources to prevent any additional char
 
 ## Conclusion
 
-This repository presented an end-to-end workflow of training a Siamese Neural Network with PyTorch and fast.ai, followed by its deployment with TorchServe eager mode on Amazon SageMaker Endpoint. You can use this repository as a template to develop and deploy your own deep learning solutions. This approach eliminates the self-maintaining effort to build and manage a customised inference server, which helps to speed up the process from training a cutting-edge deep learning model to its online application in real-world at scale.
+This repository presented an end-to-end workflow of training a Twin Neural Network with PyTorch and fast.ai, followed by its deployment with TorchServe eager mode on Amazon SageMaker Endpoint. You can use this repository as a template to develop and deploy your own deep learning solutions. This approach eliminates the self-maintaining effort to build and manage a customised inference server, which helps to speed up the process from training a cutting-edge deep learning model to its online application in real-world at scale.
 
 ## Reference
 
