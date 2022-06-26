@@ -57,7 +57,7 @@ The first step is to install fast.ai package, which is covered in its [Github](h
 > conda install -c fastai -c pytorch fastai
 > ```
 
-For other installation options, please refer to the fast.ai documentation. The following materials are based on the documentation: "[Tutorial - Using fastai on a custom new task](https://docs.fast.ai/tutorial.siamese.html#Patch-in-a-siampredict-method-to-Learner,-to-automatically-show-images-and-prediction)", with customisations specified below.
+For other installation options, please refer to the fast.ai documentation. The following materials are based on the documentation: "[Tutorial - Using fastai on a custom new task](https://docs.fast.ai/tutorial.siamese.html)", with customisations specified below.
 
 ### Model Architecture
 
