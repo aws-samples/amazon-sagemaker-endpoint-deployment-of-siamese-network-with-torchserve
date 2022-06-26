@@ -7,13 +7,13 @@
 - [Twin Neural Network Training with PyTorch and fast.ai and its Deployment with TorchServe on Amazon SageMaker](#twin-neural-network-training-with-pytorch-and-fastai-and-its-deployment-with-torchserve-on-amazon-sagemaker)
   - [Introduction](#introduction)
   - [Getting started with a PyTorch model trained with fast.ai](#getting-started-with-a-pytorch-model-trained-with-fastai)
-    - [Dataset and Transformations](#dataset-and-transformations)
-    - [Images Pair and Labels](#images-pair-and-labels)
-    - [Split and Dataloader](#split-and-dataloader)
     - [Model Architecture](#model-architecture)
       - [Encoding Network](#encoding-network)
       - [Fully Connected Network](#fully-connected-network)
       - [Twin Network](#twin-network)
+    - [Dataset and Transformations](#dataset-and-transformations)
+    - [Images Pair and Labels](#images-pair-and-labels)
+    - [Split and Dataloader](#split-and-dataloader)
     - [Training and Saving](#training-and-saving)
     - [Convolutional Neural Network Interpretation](#convolutional-neural-network-interpretation)
   - [Deployment to TorchServe](#deployment-to-torchserve)
@@ -58,6 +58,90 @@ The first step is to install fast.ai package, which is covered in its [Github](h
 > ```
 
 For other installation options, please refer to the fast.ai documentation. The following materials are based on the documentation: "[Tutorial - Using fastai on a custom new task](https://docs.fast.ai/tutorial.siamese.html#Patch-in-a-siampredict-method-to-Learner,-to-automatically-show-images-and-prediction)", with customisations specified below.
+
+### Model Architecture
+
+For Twin Neural Networks, multiple input data are passed through a _encoding_ neural network to generated their hyper-dimensional embedding vectors, which are concatenated before fed into a _fully connected network_ for output, as shown in _Fig. 1_.
+
+| ![siamese](static/siamese_archi.png) |
+|:--:|
+| **Fig. 1 - Twin Neural Network Architecture**|
+
+#### Encoding Network
+
+`ResNet50` is used, as an example, with its pre-trained weights, and the last fully connected layer is removed.
+
+```python
+import torchvision.models as models
+from torch.nn import (
+    Sequential,
+)
+
+encoder = Sequential(
+            *list(
+              models.resnet50(pretrained=True).children()
+            )[:-2]
+          )
+```
+
+#### Fully Connected Network
+
+Consisting of concatenated average and max pooling (according to fast.ai), tensor flattening, batch normalisation, dropout, linear layers and activation functions. The output is a single vector of size `2` indicating if the input images are different or same.
+
+```python
+from torch.nn import (
+    AdaptiveAvgPool2d,
+    AdaptiveMaxPool2d,
+    Flatten,
+    BatchNorm1d,
+    Dropout,
+    Linear,
+    ReLU,
+    Module,
+    Sequential,
+)
+
+class AdaptiveConcatPool2d(Module):
+    "FastAI: Layer that concats `AdaptiveAvgPool2d` and `AdaptiveMaxPool2d`"
+
+    def __init__(self, size=None):
+        super().__init__()
+        self.size = size or 1
+        self.ap = AdaptiveAvgPool2d(self.size)
+        self.mp = AdaptiveMaxPool2d(self.size)
+
+    def forward(self, x):
+        return torch.cat([self.mp(x), self.ap(x)], 1)
+
+head = Sequential(
+            AdaptiveConcatPool2d(1),
+            Flatten(),
+            BatchNorm1d(8192),
+            Dropout(0.05),
+            Linear(8192, 512, False),
+            ReLU(True),
+            BatchNorm1d(512),
+            Dropout(0.1),
+            Linear(512, 2, False),
+        )
+```
+
+#### Twin Network
+
+As shown in _Fig. 1_, both images are passed through the encoding network, and the output is concatenated before fed into the fully connected network.
+
+```python
+class SiameseModel(Module):
+    def __init__(self, encoder, head):
+        super().__init__()
+        self.encoder, self.head = encoder, head
+
+    def forward(self, x1, x2):
+        ftrs = torch.cat([self.encoder(x1), self.encoder(x2)], dim=1)
+        return self.head(ftrs)
+
+model = SiameseModel(encoder, head)
+```
 
 ### Dataset and Transformations
 
@@ -158,90 +242,6 @@ dls = tls.dataloaders(
     bs=32,
     after_batch=[*aug_transforms()],
 )
-```
-
-### Model Architecture
-
-For Twin Neural Networks, multiple input data are passed through a _encoding_ neural network to generated their hyper-dimensional embedding vectors, which are concatenated before fed into a _fully connected network_ for output, as shown in _Fig. 1_.
-
-| ![siamese](static/siamese_archi.png) |
-|:--:|
-| **Fig. 1 - Twin Neural Network Architecture**|
-
-#### Encoding Network
-
-`ResNet50` is used, as an example, with its pre-trained weights, and the last fully connected layer is removed.
-
-```python
-import torchvision.models as models
-from torch.nn import (
-    Sequential,
-)
-
-encoder = Sequential(
-            *list(
-              models.resnet50(pretrained=True).children()
-            )[:-2]
-          )
-```
-
-#### Fully Connected Network
-
-Consisting of concatenated average and max pooling (according to fast.ai), tensor flattening, batch normalisation, dropout, linear layers and activation functions. The output is a single vector of size `2` indicating if the input images are different or same.
-
-```python
-from torch.nn import (
-    AdaptiveAvgPool2d,
-    AdaptiveMaxPool2d,
-    Flatten,
-    BatchNorm1d,
-    Dropout,
-    Linear,
-    ReLU,
-    Module,
-    Sequential,
-)
-
-class AdaptiveConcatPool2d(Module):
-    "FastAI: Layer that concats `AdaptiveAvgPool2d` and `AdaptiveMaxPool2d`"
-
-    def __init__(self, size=None):
-        super().__init__()
-        self.size = size or 1
-        self.ap = AdaptiveAvgPool2d(self.size)
-        self.mp = AdaptiveMaxPool2d(self.size)
-
-    def forward(self, x):
-        return torch.cat([self.mp(x), self.ap(x)], 1)
-
-head = Sequential(
-            AdaptiveConcatPool2d(1),
-            Flatten(),
-            BatchNorm1d(8192),
-            Dropout(0.05),
-            Linear(8192, 512, False),
-            ReLU(True),
-            BatchNorm1d(512),
-            Dropout(0.1),
-            Linear(512, 2, False),
-        )
-```
-
-#### Twin Network
-
-As shown in _Fig. 1_, both images are passed through the encoding network, and the output is concatenated before fed into the fully connected network.
-
-```python
-class SiameseModel(Module):
-    def __init__(self, encoder, head):
-        super().__init__()
-        self.encoder, self.head = encoder, head
-
-    def forward(self, x1, x2):
-        ftrs = torch.cat([self.encoder(x1), self.encoder(x2)], dim=1)
-        return self.head(ftrs)
-
-model = SiameseModel(encoder, head)
 ```
 
 ### Training and Saving
