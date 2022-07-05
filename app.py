@@ -117,7 +117,7 @@ def main():
     # Wide mode
     st.set_page_config(layout="wide")
     # Designing the interface
-    st.title("Siamese Classification")
+    st.title("Twin Classification")
     # For newline
     st.write("\n")
 
