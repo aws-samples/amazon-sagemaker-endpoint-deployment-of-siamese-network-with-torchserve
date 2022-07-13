@@ -67,9 +67,11 @@ For Twin Neural Networks, multiple input data are passed through an _encoding_ n
 |:--:|
 | **Fig. 1 - Twin Neural Network Architecture**|
 
+Now that Fast.ai is installed, we can define this model architecture in pure PyTorch for Fast.ai training. Specifically, we will load the pre-trained encoding network from PyTorch, and define our customised FCN, before passing the images through both. 
+
 #### Encoding Network
 
-Now that Fast.ai is installed, we can create an image transformation pipeline to prepare our model for Fast.ai training. First, we will load the encoding network and the FCN and pass the images through both. For the encoding network, `ResNet50` is used, as an example, with its pre-trained weights, and the last fully connected layer is removed.[I'm not sure what you mean by this - do you mean it's not shown in the sample commands, or it's been removed from the process?]
+For the encoding network, `ResNet50` is used, as an example, with its pre-trained weights, and the last fully connected layer is removed to be replaced by our own FCN in the following step.
 
 ```python
 import torchvision.models as models
@@ -145,7 +147,7 @@ model = TwinModel(encoder, head)
 
 ### Dataset and Transformations
 
-[Why is this step needed? Can you add a sentence to explain?] Import `fastai.vision` modules and download the sample data `PETS`, by:
+With the Twin model defined, next we need to prepare the dataset and corresponding data transformations for the model to learn from. Import `fastai.vision` modules and download the sample data `PETS`, by:
 
 ```python
 from fastai.vision.all import *
