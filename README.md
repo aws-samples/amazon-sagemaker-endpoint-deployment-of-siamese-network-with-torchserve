@@ -34,19 +34,19 @@
 
 ## Introduction
 
-Twin Neural Network (commonly known as a Siamese Neural Network) makes predictions leveraging information from multiple sources. A common use case is taking multiple input data, e.g. images, and predicting whether they belong to the same class; though its application does not necessarily limit to computer vision or classification problems. In practise, however, artificial neural network training takes extensive and sophisticated efforts. Fortunately, there are a variety of deep learning frameworks available to tackle those, and out which stands out [fast.ai](https://www.fast.ai/) that has become one of the most cutting-edge, open source, deep learning frameworks based on [PyTorch](https://pytorch.org/). It provides concise user interface and well designed, documented APIs, which empowers developers and machine learning practitioners with productivity and flexibility.
+A Twin Neural Network (commonly known as a Siamese Neural Network) makes predictions leveraging information from multiple sources. A common use case is taking multiple input data, such as two images, and predicting whether they belong to the same class, though its application aren't necessarily limited to computer vision or classification problems. In practise, however, artificial neural network training takes extensive and sophisticated effort. Fortunately, there are a variety of deep learning frameworks available to tackle training. One which stands out, [Fast.ai](https://www.fast.ai/), has become one of the most cutting-edge, open source, deep learning frameworks based on [PyTorch](https://pytorch.org/). It provides a concise user interface and well designed, documented APIs, which empowers developers and machine learning practitioners to train models with productivity and flexibility.
 
-For deployment, [Amazon Web Services (Amazon AWS)](https://aws.amazon.com/) developed [TorchServe](https://pytorch.org/serve/) in partnership with Meta (previously, Facebook), which is a flexible and easy-to-use open source tool for serving PyTorch models. It removes the heavy lifting of deploying and serving PyTorch models with Kubernetes. With TorchServe, many features are out-of-the-box and they provide full flexibility of deploying trained PyTorch models at scale. In addition, [Amazon SageMaker](https://aws.amazon.com/sagemaker/) endpoint has been a fully managed service that allows users to make real-time inferences via a REST API, and save developers from managing their own server instances, load balancing, fault-tolerance, auto-scaling and model monitoring, etc. Amazon SageMaker endpoint supports industry level machine learning inference and graphics-intensive applications while being [cost-effective](https://aws.amazon.com/sagemaker/pricing/).
+For deployment, [Amazon Web Services (Amazon AWS)](https://aws.amazon.com/) developed [TorchServe](https://pytorch.org/serve/) in partnership with Meta (previously, Facebook), which is a flexible and easy-to-use open source tool for serving PyTorch models. It removes the heavy lifting of deploying and serving PyTorch models with Kubernetes. With TorchServe, many features are out-of-the-box and they provide full flexibility of deploying trained PyTorch models at scale. In addition, [Amazon SageMaker](https://aws.amazon.com/sagemaker/) endpoint is a fully managed service that allows users to make real-time inferences via a REST API, which saves developers from managing their own server instances, load balancing, fault-tolerance, auto-scaling and model monitoring, etc. Amazon SageMaker endpoint supports industry level machine learning inference and graphics-intensive applications while being [cost-effective](https://aws.amazon.com/sagemaker/pricing/).
 
-In this repository we demonstrate how to train a Twin Neural Network based on PyTorch and fast.ai, and deploy it with TorchServe on Amazon SageMaker Inference endpoint. For demonstration purpose, we build an interactive web application for users to upload images and make inference from the trained and deployed model, based on [streamlit](https://streamlit.io/), which is an open source framework for data scientists to efficiently create interactive web-based data applications in pure Python.
+In this repository we demonstrate how to train a Twin Neural Network based on PyTorch and Fast.ai, and deploy it with TorchServe on Amazon SageMaker Inference endpoint. For demonstration purposes, we build an interactive web application for users to upload images and make inferences from the trained and deployed model, based on [Streamlit](https://streamlit.io/), which is an open source framework for data scientists to efficiently create interactive web-based data applications in pure Python.
 
 All the code used in this document is available on [GitHub](https://github.com/aws-samples/amazon-sagemaker-endpoint-deployment-of-siamese-network-with-torchserve).
 
 ## Getting started with a PyTorch model trained with fast.ai
 
-In this section, we train a fast.ai model that determine whether two pet images are of the same breed or not.
+In this section, we train a Fast.ai model that determines whether the pets in two images are of the same breed or not.
 
-The first step is to install fast.ai package, which is covered in its [Github](https://github.com/fastai/fastai) repository.
+The first step is to install a Fast.ai package, which is covered in its [Github](https://github.com/fastai/fastai) repository.
 
 > If you're using Anaconda then run:
 > ```python
@@ -61,7 +61,7 @@ For other installation options, please refer to the fast.ai documentation. The f
 
 ### Model Architecture
 
-For Twin Neural Networks, multiple input data are passed through a _encoding_ neural network to generated their hyper-dimensional embedding vectors, which are concatenated before fed into a _fully connected network_ for output, as shown in _Fig. 1_.
+For Twin Neural Networks, multiple input data are passed through an _encoding_ neural network to generate their hyper-dimensional embedding vectors, which are concatenated before fed into a _fully connected network_ (FCN) for output, as shown in _Fig. 1_.
 
 | ![twin](static/twin_archi.png) |
 |:--:|
@@ -69,7 +69,7 @@ For Twin Neural Networks, multiple input data are passed through a _encoding_ ne
 
 #### Encoding Network
 
-`ResNet50` is used, as an example, with its pre-trained weights, and the last fully connected layer is removed.
+Now that Fast.ai is installed, we can create an image transformation pipeline to prepare our model for Fast.ai training. First, we will load the encoding network and the FCN and pass the images through both. For the encoding network, `ResNet50` is used, as an example, with its pre-trained weights, and the last fully connected layer is removed.[I'm not sure what you mean by this - do you mean it's not shown in the sample commands, or it's been removed from the process?]
 
 ```python
 import torchvision.models as models
@@ -86,7 +86,7 @@ encoder = Sequential(
 
 #### Fully Connected Network
 
-Consisting of concatenated average and max pooling (according to fast.ai), tensor flattening, batch normalisation, dropout, linear layers and activation functions. The output is a single vector of size `2` indicating if the input images are different or same.
+This model consists of concatenated average and max pooling (according to Fast.ai), tensor flattening, batch normalisation, dropout, linear layers and activation functions. The output is a single vector of size `2` indicating if the input images are different or the same.
 
 ```python
 from torch.nn import (
@@ -145,7 +145,7 @@ model = TwinModel(encoder, head)
 
 ### Dataset and Transformations
 
-Import `fastai.vision` modules and download the sample data `PETS`, by:
+[Why is this step needed? Can you add a sentence to explain?] Import `fastai.vision` modules and download the sample data `PETS`, by:
 
 ```python
 from fastai.vision.all import *
@@ -171,7 +171,7 @@ image_tfm = transforms.Compose(
 
 ### Images Pair and Labels
 
-Per fast.ai's unique semantic requirement, define the basic image-pair and label data entity for visualisation, by:
+Per Fast.ai's unique semantic requirements, define the basic image-pair and label data entity for visualisation.
 
 ```python
 class TwinImage(fastuple):
@@ -197,7 +197,7 @@ class TwinImage(fastuple):
         )
 ```
 
-Then define the helper function parsing image breads from its file path, and takes all the images from the dataset, randomly draw pairs of them, determined by if they are the same breed or not in random, by:
+Then define the helper function parsing image breads from its file path. It takes all the images from the dataset, randomly draw pairs of them, and determines if they are the same breed or not.
 
 ```python
 def label_func(fname):
@@ -228,11 +228,11 @@ class TwinTransform(Transform):
         return random.choice(self.lbl2files[cls]), same
 ```
 
-Note the raw image transformation pipeline defined above is applied, together with an extra data augmentation during training: randomly swap the two images from the pair without changing of the label.
+Note the raw image transformation pipeline defined above is applied, together with an extra data augmentation during training. This randomly swaps the two images from the pair without changing the label.
 
 ### Split and Dataloader
 
-Randomly split the dataset into train/validation partitions, and construct `dataloaders` for each them with specified batch size, by:
+Randomly split the dataset into train/validation partitions, and construct `dataloaders` for each of them with specified batch size.
 
 ```python
 splits = RandomSplitter()(files)
@@ -246,7 +246,7 @@ dls = tls.dataloaders(
 
 ### Training and Saving
 
-Now setup loss function and parameter groups, after which trigger the fast.ai training process.
+Now setup loss function and parameter groups, which then triggers the Fast.ai training process.
 
 ```python
 def loss_func(out, targ):
@@ -278,7 +278,7 @@ epoch	train_loss	valid_loss	accuracy	time
 3	0.132385	0.093117	0.964141	00:47
 ```
 
-Finally, we export the PyTorch model weights to use for following sections.
+Finally, we export the PyTorch model weights to use for the following sections.
 
 ```python
 torch.save(learn.encoder.state_dict(), "./model/encoder_weight.pth")
@@ -289,7 +289,7 @@ For more details about the modeling process, refer to `notebook/01_fastai_twin.i
 
 ### Convolutional Neural Network Interpretation
 
-The activations out of each convolutional layer can be interpreted as an extracted feature map of the input image, and the number of activations are determined by the number of convolutional filters specified in that layer. When all these activations are summed up with weights corresponding to a certain prediction, we get the _class activation map_ (CAM) which can be used as a heatmap illustrating the importance of different areas of the input image, or how much attention the model paid on different zones of the image, to make that prediction. These can be achieved by using PyTorch hook:
+The activations out of each convolutional layer can be interpreted as an extracted feature map of the input image, and the number of activations are determined by the number of convolutional filters specified in that layer. When all these activations are summed up with weights corresponding to a certain prediction, we get the _class activation map_ (CAM) which can be used as a heatmap illustrating the importance of different areas of the input image, or how much attention the model paid to different zones of the image in order to make that prediction. These can be achieved by using PyTorch hook.
 
 ```python
 class HookCAM:
@@ -322,7 +322,7 @@ class HookCAMBwd:
         self.hook.remove()
 ```
 
-With weights being the average of gradients on each convolutional filter, multiplied by the corresponding activations before summing up, we get the CAM for the prediction, as illutrated in _Fig. 2_:
+With weights being the average of gradients on each convolutional filter, multiplied by the corresponding activations before summing up, we get the CAM for the prediction, as illutrated in _Fig. 2_.
 
 ```python
 from PIL import Image
@@ -368,15 +368,15 @@ For more details please refer to `notebook/02_pytorch_inference.ipynb` [[link](n
 
 ## Deployment to TorchServe
 
-TorchServe is easy to use. It comes with a convenient commnad line interface (CLI) to deploy locally. Though it comes with default handlers for common problems such as image classification, object detection, image segmentation, and text classification, we can always tailor it for our own specifications: as TorchServe is open source, which means it’s fully open and extensible to fit any deployment needs.
+Now that we have our trained model for the images of cats, we can easily use TorchServe to serve the model. TorchServe comes with a convenient command line interface (CLI) to deploy locally. It also comes with default handlers for common problems such as image classification, object detection, image segmentation, and text classification. But we can always tailor it for our own specifications because TorchServe is open source, which means it’s fully extensible to fit any deployment needs.
 
-In this section we deploy the PyTorch model to TorchServe. For installation, please refer to TorchServe [Github](https://github.com/pytorch/serve) Repository. Overall, there are mainly 3 steps to use TorchServe:
+In this section we deploy the PyTorch model to TorchServe. For installation, please refer to the TorchServe [Github](https://github.com/pytorch/serve) Repository. Overall, there are 3 main steps to use TorchServe:
 
 1. Archive the model into `*.mar`.
-2. Start the `torchserve`.
+2. Start the `torchserve` process.
 3. Call the API and get the response.
 
-In order to archive the model, 3 files are needed in our case:
+In order to archive the model, three files are needed in our case:
 
 1. PyTorch encoding model `ResNet50` weights `encoder_weight.pth`.
 2. PyTorch fully connected network weights `head_weight.pth`
@@ -384,11 +384,11 @@ In order to archive the model, 3 files are needed in our case:
 
 ### Custom Handler
 
-As shown in `/deployment/handler.py`, the TorchServe handler accept `data` and `context`. In our example, we define another helper Python class with 4 instance methods to implement: `initialize`, `preprocess`, `inference` and `postprocess`.
+As shown in `/deployment/handler.py`, the TorchServe handler accepts `data` and `context`. In our example, we define another helper Python class with four instance methods to implement: `initialize`, `preprocess`, `inference` and `postprocess`.
 
 #### `initialize`
 
-Workout if GPU is available, then identify the serialized model weights file path and finally instantiate the PyTorch model and put it to evaluation mode.
+Initialize works out if GPU resources are available, then identifies the serialized model weights file path and finally instantiates the PyTorch model and puts it to evaluation mode.
 
 ```python
     def initialize(self, ctx):
@@ -430,7 +430,7 @@ Workout if GPU is available, then identify the serialized model weights file pat
 
 #### `preprocess`
 
-Here read the image and apply the transformation pipeline to the inference data.
+This reads the image and applies the transformation pipeline to the inference data.
 
 ```python
     def preprocess(self, data):
@@ -453,7 +453,7 @@ Here read the image and apply the transformation pipeline to the inference data.
 
 #### `inference`
 
-Now load the data into GPU if available, and pass it through the model consisting of both encoder and fully connected network. If CAM is required, calculate and return the heatmap.
+Now it loads the data to the GPU if available, and passes it through the model consisting of both encoder and fully connected network. If CAM is required, it calculates and returns the heatmap.
 
 ```python
     def inference(self, left_image, right_image):
@@ -504,7 +504,7 @@ Now load the data into GPU if available, and pass it through the model consistin
 
 #### `postprocess`
 
-The inference raw output is unloaded from GPU if available, combined with CAM to be returned back to the API trigger.
+The inference raw output is unloaded from the GPU if available, and it is combined with CAM to be returned back to the API trigger.
 
 ```python
     def postprocess(self, inference_output):
@@ -571,11 +571,11 @@ The first call would have longer latency due to model weights loading defined in
 
 ## Deployment to Amazon SageMaker Inference Endpoint
 
-For customised machine learning model deployment and hosting, Amazon SageMaker is fully modular, which means we can always bring in customised algorithms and containers and use only the services that are required. In our case it is the Amazon SageMaker Model and Endpoint. Concretely, we are building a TorchServe container and host it using Amazon SageMaker for a fully-managed model hosting and elastic scaling experience, with simply a few lines of code. On the client side, we get predictions with simple API calls to its secure endpoint backed by TorchServe.
+For customised machine learning model deployment and hosting, Amazon SageMaker is fully modular, which means we can always bring in customised algorithms and containers and use only the services that are required. In our case it is the Amazon SageMaker Model and Endpoint. Specifically, we are building a TorchServe container and hosting it using Amazon SageMaker for a fully managed model hosting and elastic-scaling experience, with simply a few lines of code. On the client side, we get predictions with simple API calls to its secure endpoint backed by TorchServe.
 
 There are 4 steps to setup a SageMaker Endpoint with TorchServe:
 
-1. Build customized Docker Image and push to Amazon Elastic Container Registry (ECR). The dockerfile is provided in root of this code repository, which helps setup CUDA and TorchServe dependencies.
+1. Build a customized Docker Image and push to Amazon Elastic Container Registry (ECR). The dockerfile is provided in root of this code repository, which helps setup CUDA and TorchServe dependencies.
 2. Compress `*.mar` into `*.tar.gz` and upload to Amazon Simple Storage Service (S3).
 3. Create SageMaker model using the docker image from step 1 and the compressed model weights from step 2.
 4. Create the SageMaker endpoint using the model from step 3.
@@ -584,7 +584,7 @@ The details of these steps are described in `notebook/03_SageMaker.ipynb` [[link
 
 ### Real-time Inference with Python SDK
 
-Read sample images.
+Read sample images. 
 
 ```python
 cam = False
@@ -618,9 +618,9 @@ neg, pos
 
 ### Web Application Demonstration
 
-Streamlit is an open source framework for data scientists to efficiently create interactive web-based data applications in pure Python. It allows for quick end-to-end deployment with minimal effort and the ability to scale out the application as needed in a secure and robust way, without getting bogged down in time-consuming front-end development.
+Streamlit is an open source framework for data scientists to efficiently create interactive web-based data applications in pure Python. It allows for quick end-to-end deployment with minimal effort and the ability to scale out the application as needed in a secure and robust way, without getting bogged down in time-consuming, front-end development.
 
-To run the streamlit application provided in the root of this code repository, first install the dependencies by:
+To run the Streamlit application provided in the root of this code repository, first install the dependencies:
 
 ```sh
 pip install -r requirements-demo.txt
@@ -632,7 +632,7 @@ And setup the AWS credentials according to [Set up AWS Credentials and Region fo
 streamlit run app.py 
 ```
 
-This will enable users to upload images, invoke the SageMaker endpoint, and visualise the inference results with model explainability.
+This will enable users to upload images, invoke the SageMaker endpoint, and visualise the inference results with model explainability. 
 
 ![record](static/record.gif)
 
@@ -648,7 +648,7 @@ Make sure that you delete the following resources to prevent any additional char
 
 ## Conclusion
 
-This repository presented an end-to-end workflow of training a Twin Neural Network with PyTorch and fast.ai, followed by its deployment with TorchServe eager mode on Amazon SageMaker Endpoint. You can use this repository as a template to develop and deploy your own deep learning solutions. This approach eliminates the self-maintaining effort to build and manage a customised inference server, which helps to speed up the process from training a cutting-edge deep learning model to its online application in real-world at scale.
+This repository presented an end-to-end workflow for training a Twin Neural Network with PyTorch and Fast.ai, followed by its deployment with TorchServe eager mode on Amazon SageMaker Endpoint. You can use this repository as a template to develop and deploy your own deep learning solutions. We then used an application built with the open source Streamlit framework that demonstrates how end users can use the new model to compare two images and visualise the results. This approach eliminates the self-maintainance effort to build and manage a customised inference server, which helps to speed up the process from training a cutting-edge deep learning model to its online application in the real world, at scale.
 
 ## Reference
 
