@@ -516,8 +516,6 @@ The inference raw output is unloaded from the GPU if available, and it is combin
             if self.cam:
                 self.cam_map_left = self.cam_map_left.cpu()
                 self.cam_map_right = self.cam_map_right.cpu()
-        else:
-            inference_output = inference_output
 
         if not self.cam:
             return [inference_output.numpy().tolist()]
